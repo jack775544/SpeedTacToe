@@ -67,40 +67,48 @@ public class Game
 	public void Run()
 	{
 		var turn = 0;
-		while (GameState is InProgressState)
+
+		while (true)
 		{
+			var currentPlayer = _players[turn];
 			Console.WriteLine(ToString());
 
-			var isActionValid = false;
-
-			do
+			switch (GameState)
 			{
-				Console.WriteLine($"{_players[turn].Name}, please enter your position");
-				var action = _players[turn].TakeTurn(this);
-				isActionValid = Board[action].Player == null;
+				case InProgressState:
+					var isActionValid = false;
 
-				if (isActionValid)
-				{
-					Board[action].Player = _players[turn];
-				}
-				else
-				{
-					Console.WriteLine("Invalid turn, please enter again");
-				}
-			} while(!isActionValid);
+					do
+					{
+						Console.WriteLine($"{currentPlayer.Name}, please enter your position");
+						var action = currentPlayer.TakeTurn(this);
+						isActionValid = Board[action].Player == null;
 
-			turn = (turn + 1) % 2;
+						if (isActionValid)
+						{
+							Board[action].Player = currentPlayer;
+						}
+						else
+						{
+							Console.WriteLine("Invalid turn, please enter again");
+						}
+					} while(!isActionValid);
+
+					turn = (turn + 1) % 2;
+					break;
+
+				case TieState:
+					Console.WriteLine("The game ends in a tie");
+					return;
+
+				case WinnerState winnerState:
+					Console.WriteLine($"The winner is {winnerState.Player.Name}");
+					return;
+
+				default:
+					throw new ArgumentOutOfRangeException(nameof(GameState));
+			}
 		}
-
-		Console.WriteLine(ToString());
-
-		var message = GameState switch
-		{
-			TieState => "The game ends in a tie",
-			WinnerState winnerState => $"The winner is {winnerState.Player.Name}",
-			_ => $"Something weird happened, the game state is {GameState.GetType().Name}"
-		};
-		Console.WriteLine(message);
 	}
 
 	public override string ToString()
